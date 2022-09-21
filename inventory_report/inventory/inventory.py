@@ -1,8 +1,8 @@
-import csv
-import json
-import xml.etree.ElementTree as ET
 from inventory_report.reports.simple_report import SimpleReport
 from inventory_report.reports.complete_report import CompleteReport
+from inventory_report.importer.csv_importer import CsvImporter
+from inventory_report.importer.json_importer import JsonImporter
+from inventory_report.importer.xml_importer import XmlImporter
 
 
 class Inventory:
@@ -11,42 +11,29 @@ class Inventory:
 
     @staticmethod
     def import_data(path, type):
-        if path.endswith('.csv'):
-            with open(path) as file:
-                reader = csv.DictReader(file)
-                data = []
-                for row in reader:
-                    data.append(row)
+        if path.endswith(".csv"):
+            data = CsvImporter.import_data(path)
 
-                if type == "simples":
-                    return SimpleReport.generate(data)
-                else:
-                    return CompleteReport.generate(data)
+            return (
+                SimpleReport.generate(data)
+                if type == "simples"
+                else CompleteReport.generate(data)
+            )
 
-        elif path.endswith('.json'):
-            with open(path) as file:
-                data = json.loads(file.read())
+        elif path.endswith(".json"):
+            data = JsonImporter.import_data(path)
 
-                if type == "simples":
-                    return SimpleReport.generate(data)
-                else:
-                    return CompleteReport.generate(data)
+            return (
+                SimpleReport.generate(data)
+                if type == "simples"
+                else CompleteReport.generate(data)
+            )
 
         else:
-            with open(path) as file:
-                tree = ET.parse(file)
-                root = tree.getroot()
-                data = []
+            data = XmlImporter.import_data(path)
 
-                product = {}
-                for child in root.iter():
-                    if '\n' not in child.text:
-                        product[child.tag] = child.text
-                    if child.tag == 'instrucoes_de_armazenamento':
-                        data.append(product)
-                        product = {}
-
-                if type == "simples":
-                    return SimpleReport.generate(data)
-                else:
-                    return CompleteReport.generate(data)
+            return (
+                SimpleReport.generate(data)
+                if type == "simples"
+                else CompleteReport.generate(data)
+            )
